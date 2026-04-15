@@ -98,15 +98,16 @@ public class QuizServlet extends HttpServlet {
 
         int score = 0;
         int totalQuestions = questions.size();
-        
+
         // Use a simple list of maps for feedback, then convert to JSON with Gson
         java.util.List<java.util.Map<String, Object>> feedbackList = new java.util.ArrayList<>();
 
         for (Question q : questions) {
             String userAnswer = request.getParameter("q_" + q.getId());
             boolean isCorrect = userAnswer != null && userAnswer.equals(q.getCorrectAnswer());
-            
-            if (isCorrect) score++;
+
+            if (isCorrect)
+                score++;
 
             java.util.Map<String, Object> map = new java.util.HashMap<>();
             map.put("question", q.getQuestion());
@@ -118,17 +119,18 @@ public class QuizServlet extends HttpServlet {
 
         User user = (User) session.getAttribute("user");
         Result result = new Result(0, user.getUsername(), score, totalQuestions, null);
-        
+
         boolean saved = resultDAO.saveResult(result);
-        System.out.println("Quiz submitted by " + user.getUsername() + ". Score: " + score + "/" + totalQuestions + ". Saved: " + saved);
+        System.out.println("Quiz submitted by " + user.getUsername() + ". Score: " + score + "/" + totalQuestions
+                + ". Saved: " + saved);
 
         // Store result in session
         session.setAttribute("lastScore", score);
         session.setAttribute("totalQuestions", totalQuestions);
         session.setAttribute("lastFeedback", new Gson().toJson(feedbackList));
-        
+
         // Clear quiz session
-        session.removeAttribute("quizQuestions"); 
+        session.removeAttribute("quizQuestions");
 
         // AJAX response
         response.setContentType("text/plain");

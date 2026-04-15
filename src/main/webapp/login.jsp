@@ -50,7 +50,8 @@
             </form>
             
             <div class="mt-3 text-center">
-                <p class="mb-0">Don't have an account? <a href="register.jsp">Register here</a></p>
+                <p class="mb-1">Don't have an account? <a href="register.jsp">Register here</a></p>
+                <p class="mb-0 small"><a href="adminLogin.jsp" class="text-muted">Are you an Admin? Login here</a></p>
             </div>
             
         </div>

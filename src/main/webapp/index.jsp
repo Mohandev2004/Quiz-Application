@@ -26,7 +26,8 @@
                 <a class="navbar-brand fw-bold" href="#">🎓 QuizMaster</a>
                 <div>
                     <a href="login.jsp" class="btn btn-outline-light me-2">Login</a>
-                    <a href="register.jsp" class="btn btn-primary">Sign Up</a>
+                    <a href="register.jsp" class="btn btn-primary me-2">Sign Up</a>
+                    <a href="adminLogin.jsp" class="btn btn-link text-white-50 text-decoration-none small">Admin</a>
                 </div>
             </div>
         </nav>
