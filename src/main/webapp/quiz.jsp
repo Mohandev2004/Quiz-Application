@@ -1,234 +1,435 @@
-<%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" isELIgnored="true" %>
-    <%@ page import="com.model.User" %>
-        <% User user=(User) session.getAttribute("user"); if(user==null) { response.sendRedirect("login.jsp"); return; }
-            %>
-            <!DOCTYPE html>
-            <html lang="en">
+<%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" isELIgnored="true"%>
+<%@ page import="com.model.User" %>
 
-            <head>
-                <meta charset="UTF-8">
-                <meta name="viewport" content="width=device-width, initial-scale=1.0">
-                <title>Active Quiz - Java Quiz App</title>
-                <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-                <style>
-                    .timer-badge {
-                        font-size: 1.25rem;
-                    }
+<%
+User user = (User) session.getAttribute("user");
 
-                    .hidden {
-                        display: none;
-                    }
-                </style>
-            </head>
+if(user == null){
+    response.sendRedirect("login.jsp");
+    return;
+}
+%>
 
-            <body class="bg-light">
+<!DOCTYPE html>
+<html lang="en">
 
-                <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
-                    <div class="container">
-                        <span class="navbar-brand">Quiz in Progress</span>
-                        <div class="d-flex align-items-center">
-                            <span class="badge bg-danger timer-badge" id="timerDisplay">--:--</span>
-                        </div>
-                    </div>
-                </nav>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-                <div class="container mt-5" id="quizContainer">
+<title>Active Quiz | QuizMaster</title>
 
-                    <div class="row justify-content-center">
-                        <div class="col-md-8">
-                            <div class="card shadow-sm">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
 
-                                <div
-                                    class="card-header bg-white d-flex justify-content-between align-items-center py-3">
-                                    <h5 class="mb-0" id="questionHeader">Loading...</h5>
-                                    <span class="badge bg-secondary" id="questionCountBadge">0 / 0</span>
-                                </div>
+<link rel="stylesheet"
+href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
 
-                                <div class="card-body p-4">
-                                    <div id="loadingSpinner" class="text-center py-5">
-                                        <div class="spinner-border text-primary" role="status">
-                                            <span class="visually-hidden">Loading...</span>
-                                        </div>
-                                        <p class="mt-2 text-muted">Fetching questions...</p>
-                                    </div>
+<style>
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+}
 
-                                    <form id="quizForm" class="hidden">
-                                        <h4 id="questionText" class="mb-4"></h4>
+body{
+    font-family:'Segoe UI',sans-serif;
+    background:
+    radial-gradient(circle at top right,#2563eb 0%,transparent 28%),
+    radial-gradient(circle at bottom left,#06b6d4 0%,transparent 28%),
+    #0f172a;
+    color:white;
+    min-height:100vh;
+}
 
-                                        <div class="list-group mb-4" id="optionsContainer">
-                                            <!-- Options injected dynamically via JS -->
-                                        </div>
-                                    </form>
-                                </div>
+.hidden{
+    display:none;
+}
 
-                                <div class="card-footer bg-white d-flex justify-content-between py-3 hidden"
-                                    id="quizFooter">
-                                    <button class="btn btn-outline-secondary" id="prevBtn" disabled>Previous</button>
-                                    <div>
-                                        <button class="btn btn-primary hidden" id="nextBtn">Next</button>
-                                        <button class="btn btn-success hidden" id="submitBtn">Submit Quiz</button>
-                                    </div>
-                                </div>
+/* Navbar */
+.navbar{
+    background:rgba(2,6,23,.90);
+    backdrop-filter:blur(12px);
+    border-bottom:1px solid rgba(255,255,255,.05);
+}
 
-                            </div>
-                        </div>
-                    </div>
-                </div>
+/* Timer */
+.timer-box{
+    font-size:1rem;
+    font-weight:700;
+    padding:10px 18px;
+    border-radius:30px;
+    background:#ef4444;
+}
 
-                <!-- AJAX and Quiz Logic -->
-                <script>
-                    document.addEventListener("DOMContentLoaded", function () {
+/* Card */
+.quiz-card{
+    background:rgba(255,255,255,.06);
+    border:1px solid rgba(255,255,255,.08);
+    border-radius:24px;
+    backdrop-filter:blur(16px);
+    box-shadow:0 25px 45px rgba(0,0,0,.22);
+    overflow:hidden;
+}
 
-                        let questions = [];
-                        let currentIndex = 0;
-                        let userAnswers = {};
-                        let timerInterval;
+.quiz-header{
+    background:rgba(255,255,255,.03);
+    padding:20px 25px;
+    border-bottom:1px solid rgba(255,255,255,.05);
+}
 
-                        const els = {
-                            spinner: document.getElementById('loadingSpinner'),
-                            form: document.getElementById('quizForm'),
-                            footer: document.getElementById('quizFooter'),
-                            qHeader: document.getElementById('questionHeader'),
-                            qCountBadge: document.getElementById('questionCountBadge'),
-                            qText: document.getElementById('questionText'),
-                            optContainer: document.getElementById('optionsContainer'),
-                            prevBtn: document.getElementById('prevBtn'),
-                            nextBtn: document.getElementById('nextBtn'),
-                            submitBtn: document.getElementById('submitBtn'),
-                            timerDisplay: document.getElementById('timerDisplay')
-                        };
+.question-title{
+    font-weight:700;
+    font-size:1.2rem;
+}
 
-                        // 1. Fetch Questions via AJAX
-                        fetch('QuizServlet?action=getQuestions')
-                            .then(res => res.json())
-                            .then(data => {
-                                questions = data;
-                                if (questions.length > 0) {
-                                    initQuiz();
-                                } else {
-                                    els.qHeader.innerText = "Error";
-                                    els.spinner.innerHTML = "<p class='text-danger'>No questions found. Contact Admin.</p>";
-                                }
-                            })
-                            .catch(err => console.error(err));
+.question-badge{
+    background:#1e293b;
+    padding:10px 16px;
+    border-radius:30px;
+    font-weight:600;
+}
 
-                        function initQuiz() {
-                            // Initialize UI
-                            els.spinner.classList.add('hidden');
-                            els.form.classList.remove('hidden');
-                            els.footer.classList.remove('hidden');
+/* Options */
+.option-item{
+    background:#111827;
+    border:1px solid rgba(255,255,255,.06);
+    color:white;
+    border-radius:16px;
+    padding:16px 18px;
+    margin-bottom:14px;
+    cursor:pointer;
+    transition:.25s;
+}
 
-                            // Timer Logic (1 min per question)
-                            let timeRemaining = questions.length * 60;
-                            updateTimerDisplay(timeRemaining);
+.option-item:hover{
+    background:#1e293b;
+    transform:translateY(-2px);
+}
 
-                            timerInterval = setInterval(() => {
-                                timeRemaining--;
-                                updateTimerDisplay(timeRemaining);
-                                if (timeRemaining <= 0) {
-                                    clearInterval(timerInterval);
-                                    submitQuiz();
-                                }
-                            }, 1000);
+.option-item input{
+    transform:scale(1.2);
+    margin-right:12px;
+}
 
-                            renderQuestion();
-                        }
+/* Footer */
+.quiz-footer{
+    background:rgba(255,255,255,.03);
+    padding:20px 25px;
+    border-top:1px solid rgba(255,255,255,.05);
+}
 
-                        function updateTimerDisplay(seconds) {
-                            if (seconds <= 0) seconds = 0;
-                            let m = Math.floor(seconds / 60);
-                            let s = seconds % 60;
-                            els.timerDisplay.innerText = (m < 10 ? '0' + m : m) + ':' + (s < 10 ? '0' + s : s);
-                            if (seconds <= 30) {
-                                els.timerDisplay.classList.remove('bg-danger');
-                                els.timerDisplay.classList.add('bg-warning', 'text-dark');
-                            }
-                        }
+/* Buttons */
+.btn-main{
+    background:linear-gradient(90deg,#2563eb,#06b6d4);
+    border:none;
+    color:white;
+    border-radius:12px;
+    padding:10px 22px;
+    font-weight:600;
+}
 
-                        function renderQuestion() {
-                            const q = questions[currentIndex];
+.btn-main:hover{
+    color:white;
+    opacity:.95;
+}
 
-                            els.qHeader.innerText = "Question " + (currentIndex + 1);
-                            els.qCountBadge.innerText = (currentIndex + 1) + " / " + questions.length;
-                            els.qText.innerText = q.question;
+.btn-outline-custom{
+    border:1px solid rgba(255,255,255,.15);
+    color:white;
+    border-radius:12px;
+    padding:10px 22px;
+}
 
-                            // Dynamically create options
-                            const opts = [q.option1, q.option2, q.option3, q.option4];
-                            let html = '';
-                            opts.forEach((opt, i) => {
-                                let checked = (userAnswers[q.id] === opt) ? 'checked' : '';
-                                html += '<label class="list-group-item list-group-item-action text-dark fs-5 py-3">' +
-                                        '<input class="form-check-input me-3 border-secondary" type="radio" name="q_' + q.id + '" value="' + opt + '" ' + checked + ' onchange="saveAnswer(' + q.id + ', this.value)">' +
-                                        opt +
-                                        '</label>';
-                            });
-                            els.optContainer.innerHTML = html;
+.btn-outline-custom:hover{
+    background:rgba(255,255,255,.08);
+    color:white;
+}
+</style>
+</head>
 
-                            // Button states
-                            els.prevBtn.disabled = (currentIndex === 0);
+<body>
 
-                            if (currentIndex === questions.length - 1) {
-                                els.nextBtn.classList.add('hidden');
-                                els.submitBtn.classList.remove('hidden');
-                            } else {
-                                els.nextBtn.classList.remove('hidden');
-                                els.submitBtn.classList.add('hidden');
-                            }
-                        }
+<!-- Navbar -->
+<nav class="navbar navbar-expand-lg navbar-dark py-3">
+<div class="container">
 
-                        window.saveAnswer = function (qId, val) {
-                            userAnswers[qId] = val;
-                        }
+<span class="navbar-brand fw-bold">
+<i class="bi bi-lightning-charge-fill me-2"></i>Quiz In Progress
+</span>
 
-                        els.prevBtn.addEventListener('click', () => {
-                            if (currentIndex > 0) { currentIndex--; renderQuestion(); }
-                        });
+<div class="timer-box" id="timerDisplay">--:--</div>
 
-                        els.nextBtn.addEventListener('click', () => {
-                            if (currentIndex < questions.length - 1) { currentIndex++; renderQuestion(); }
-                        });
+</div>
+</nav>
 
-                        els.submitBtn.addEventListener('click', () => {
-                            if (confirm("Are you sure you want to finish the quiz?")) {
-                                submitQuiz();
-                            }
-                        });
+<!-- Main -->
+<div class="container py-5">
 
-                        // Submits the form data via AJAX POST
-                        function submitQuiz() {
-                            clearInterval(timerInterval);
-                            els.submitBtn.disabled = true;
-                            els.submitBtn.innerText = "Evaluating...";
+<div class="row justify-content-center">
+<div class="col-lg-8">
 
-                            // Form URL Encoded data
-                            let formData = new URLSearchParams();
-                            for (let qId in userAnswers) {
-                                formData.append('q_' + qId, userAnswers[qId]);
-                            }
+<div class="quiz-card">
 
-                            fetch('QuizServlet', {
-                                method: 'POST',
-                                body: formData
-                            })
-                                .then(res => res.text())
-                                .then(result => {
-                                    // Once saved logic evaluates on server, redirect to result screen
-                                    window.onbeforeunload = null; // Remove refresh block
-                                    window.location.href = "ResultServlet";
-                                })
-                                .catch(err => {
-                                    alert("Error submitting quiz!");
-                                    els.submitBtn.disabled = false;
-                                });
-                        }
+<!-- Header -->
+<div class="quiz-header d-flex justify-content-between align-items-center">
 
-                        // Prevent page refresh warning
-                        window.onbeforeunload = function () {
-                            return "Leaving this page will lose your quiz progress.";
-                        };
-                    });
-                </script>
+<div class="question-title" id="questionHeader">
+Loading...
+</div>
 
-            </body>
+<div class="question-badge" id="questionCountBadge">
+0 / 0
+</div>
 
-            </html>
+</div>
+
+<!-- Body -->
+<div class="p-4">
+
+<div id="loadingSpinner" class="text-center py-5">
+<div class="spinner-border text-info mb-3"></div>
+<p class="text-light">Loading quiz questions...</p>
+</div>
+
+<form id="quizForm" class="hidden">
+
+<h3 class="mb-4" id="questionText"></h3>
+
+<div id="optionsContainer"></div>
+
+</form>
+
+</div>
+
+<!-- Footer -->
+<div class="quiz-footer d-flex justify-content-between hidden"
+id="quizFooter">
+
+<button class="btn btn-outline-custom"
+id="prevBtn" disabled>
+Previous
+</button>
+
+<div>
+<button class="btn btn-main hidden"
+id="nextBtn">
+Next
+</button>
+
+<button class="btn btn-success hidden ms-2"
+id="submitBtn">
+Submit Quiz
+</button>
+</div>
+
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+
+<script>
+document.addEventListener("DOMContentLoaded", function(){
+
+let questions = [];
+let currentIndex = 0;
+let userAnswers = {};
+let timerInterval;
+
+const els = {
+spinner: document.getElementById("loadingSpinner"),
+form: document.getElementById("quizForm"),
+footer: document.getElementById("quizFooter"),
+qHeader: document.getElementById("questionHeader"),
+qCountBadge: document.getElementById("questionCountBadge"),
+qText: document.getElementById("questionText"),
+optContainer: document.getElementById("optionsContainer"),
+prevBtn: document.getElementById("prevBtn"),
+nextBtn: document.getElementById("nextBtn"),
+submitBtn: document.getElementById("submitBtn"),
+timerDisplay: document.getElementById("timerDisplay")
+};
+
+/* Load Questions */
+fetch("QuizServlet?action=getQuestions")
+.then(res => res.json())
+.then(data => {
+
+questions = data;
+
+if(questions.length > 0){
+initQuiz();
+}else{
+els.spinner.innerHTML =
+"<p class='text-danger'>No questions found.</p>";
+}
+
+})
+.catch(err => console.log(err));
+
+function initQuiz(){
+
+els.spinner.classList.add("hidden");
+els.form.classList.remove("hidden");
+els.footer.classList.remove("hidden");
+
+let timeRemaining = questions.length * 60;
+
+updateTimer(timeRemaining);
+
+timerInterval = setInterval(function(){
+
+timeRemaining--;
+updateTimer(timeRemaining);
+
+if(timeRemaining <= 0){
+clearInterval(timerInterval);
+submitQuiz();
+}
+
+},1000);
+
+renderQuestion();
+}
+
+function updateTimer(seconds){
+
+if(seconds < 0) seconds = 0;
+
+let m = Math.floor(seconds / 60);
+let s = seconds % 60;
+
+els.timerDisplay.innerText =
+(m < 10 ? "0"+m : m) + ":" +
+(s < 10 ? "0"+s : s);
+
+if(seconds <= 30){
+els.timerDisplay.style.background = "#f59e0b";
+els.timerDisplay.style.color = "#111";
+}
+
+if(seconds <= 10){
+els.timerDisplay.style.background = "#dc2626";
+els.timerDisplay.style.color = "white";
+}
+}
+
+function renderQuestion(){
+
+let q = questions[currentIndex];
+
+els.qHeader.innerText =
+"Question " + (currentIndex + 1);
+
+els.qCountBadge.innerText =
+(currentIndex + 1) + " / " + questions.length;
+
+els.qText.innerText = q.question;
+
+let opts = [q.option1,q.option2,q.option3,q.option4];
+
+let html = "";
+
+opts.forEach(function(opt){
+
+let checked =
+(userAnswers[q.id] === opt) ? "checked" : "";
+
+html += `
+<label class="option-item d-block">
+<input type="radio"
+name="q_${q.id}"
+value="${opt}"
+${checked}
+onchange="saveAnswer(${q.id}, this.value)">
+${opt}
+</label>
+`;
+
+});
+
+els.optContainer.innerHTML = html;
+
+els.prevBtn.disabled = currentIndex === 0;
+
+if(currentIndex === questions.length - 1){
+els.nextBtn.classList.add("hidden");
+els.submitBtn.classList.remove("hidden");
+}else{
+els.nextBtn.classList.remove("hidden");
+els.submitBtn.classList.add("hidden");
+}
+}
+
+window.saveAnswer = function(id,val){
+userAnswers[id] = val;
+}
+
+els.prevBtn.onclick = function(){
+if(currentIndex > 0){
+currentIndex--;
+renderQuestion();
+}
+};
+
+els.nextBtn.onclick = function(){
+if(currentIndex < questions.length - 1){
+currentIndex++;
+renderQuestion();
+}
+};
+
+els.submitBtn.onclick = function(){
+
+if(confirm("Submit your quiz now?")){
+submitQuiz();
+}
+
+};
+
+function submitQuiz(){
+
+clearInterval(timerInterval);
+
+els.submitBtn.disabled = true;
+els.submitBtn.innerText = "Submitting...";
+
+let formData = new URLSearchParams();
+
+for(let qId in userAnswers){
+formData.append("q_" + qId, userAnswers[qId]);
+}
+
+fetch("QuizServlet",{
+method:"POST",
+body:formData
+})
+.then(res => res.text())
+.then(data => {
+
+window.onbeforeunload = null;
+window.location.href = "ResultServlet";
+
+})
+.catch(err => {
+
+alert("Submission failed.");
+els.submitBtn.disabled = false;
+
+});
+
+}
+
+/* Refresh Warning */
+window.onbeforeunload = function(){
+return "Leaving page may lose your progress.";
+};
+
+});
+</script>
+
+</body>
+</html>
