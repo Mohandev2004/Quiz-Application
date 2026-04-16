@@ -1,40 +1,99 @@
-# Java Quiz Application (AJAX + Bootstrap Refactor)
+# 🚀 Java Quiz Application
 
-A complete, responsive web application built with Java, Servlets, JSP, JDBC, and Bootstrap 5 for a final-year project standard.
+![Project Header](./header.png)
 
-## Technology Stack
-- **Backend:** Java (JDK 8+), Granular Servlets, JSP
-- **Architecture:** Standard MVC (Model-View-Controller)
-- **Database:** MySQL (using PreparedStatements to defeat SQL Injection)
-- **GUI Framework:** Bootstrap 5 (CSS/JS fetched via CDN)
-- **Build Tool:** Maven
-- **Server:** Apache Tomcat 9
-
-## Advanced Features Implemented
-- **Granular Dispatching**: Separated Servlets (Login, Register, Logout, Quiz, Result, Admin) rather than massive monolithic dispatchers.
-- **Dynamic AJAX Quiz**: The quiz form uses asynchronous Javascript fetching to read the question payloads via REST JSON. The page absolutely does not reload during the quiz, mitigating state-loss on refresh errors. It also employs an `onbeforeunload` listener to warn the user if they try to change the URL midway.
-- **Active Timer**: Javascript countdown initializes proportional to the total number of questions fetched. Triggers server-side auto-submit upon failure.
-- **Modern UI**: Completely styled using Bootstrap 5 classes including cards, grids, spinners, and badges.
+A high-performance, professional-grade **Quiz Application** built using the Java EE stack. This project follows the **MVC (Model-View-Controller)** architecture and implements modern web features like asynchronous quiz submission through AJAX, responsive design via Bootstrap 5, and a robust MySQL backend.
 
 ---
 
-## Setup Instructions
+## 🛠️ Technological Stack
 
-### 1. Database Setup
-1. Launch MySQL logic environment (Workbench/CLI).
-2. Open `src/main/resources/quiz_db.sql` and run all scripts. 
-   - Generates the schema precisely to the specifications requested:
-     `users (id, username, password)`
-     `questions (id, question, option1, option2, option3, option4, correct_answer)`
-     `results (id, username, score, total_questions, timestamp)`
-3. Ensure the DB connection in `src/main/java/com/util/DBConnection.java` corresponds to your local configuration (root/password).
+| Layer | Technology |
+| :--- | :--- |
+| **Backend** | Java (JDK 8+), Servlets, JSP |
+| **Database** | MySQL (JDBC) |
+| **Frontend** | Bootstrap 5, CSS3, JavaScript (AJAX) |
+| **Build Tool** | 	Apache Maven |
+| **Server** | Apache Tomcat 9.0+ |
 
-### 2. Deployment in Eclipse (Apache Tomcat)
-1. In Eclipse Enterprise Java Edition, select **File > Import > Maven > Existing Maven Projects**. 
-2. Point it to this root folder.
-3. Make sure you have the Apache Tomcat 9 Server configured in your `Servers` view pane.
-4. Right-click the `quiz-application` project > **Run As > Run on Server**.
-5. Once Tomcat boots, navigate to `http://localhost:8080/quiz-application/` to view the initial login portal.
-6. The `admin` panel can be accessed by specifically logging into the standard payload using credentials:
-   **Username: admin**
-   **Password: admin123**
+---
+
+## ✨ Key Features
+
+- **🎯 Interactive AJAX Quiz**: Solve questions seamlessly without page reloads. The state is managed asynchronously, preventing data loss on accidental refreshes.
+- **⏱️ Real-time Timer**: A dynamic countdown timer that automatically handles quiz submission upon completion.
+- **🛡️ Secure Authentication**: User and Admin login systems with secure session management.
+- **📊 Result Analytics**: Instant calculation of scores with a detailed breakdown of correct/incorrect answers.
+- **📱 Responsive UI**: Fully optimized for mobile, tablet, and desktop viewing using Bootstrap's grid system.
+- **⚙️ Admin Dashboard**: Dedicated portal for managing users, questions, and viewing overall performance.
+
+---
+
+## 🏗️ Project Architecture (MVC)
+
+```mermaid
+graph TD
+    User[User Browser] <--> JSP[JSP Views]
+    JSP <--> Servlet[Servlets / Controller]
+    Servlet <--> DAO[DAO Layer]
+    DAO <--> DB[(MySQL Database)]
+    DAO <--> Model[POJO Models]
+```
+
+- **Model**: `com.model` (User, Question, Result)
+- **View**: `src/main/webapp` (JSP files)
+- **Controller**: `com.controller` (Servlets)
+- **DAO**: `com.dao` (Data Access Objects)
+
+---
+
+## 📥 Getting Started (Eclipse Setup)
+
+Follow these steps to set up the project locally in Eclipse IDE.
+
+### 1. Prerequisites
+- **Eclipse IDE** (Enterprise Java Edition)
+- **Java JDK 8 or higher**
+- **MySQL Server**
+- **Apache Tomcat 9.0**
+
+### 2. Database Configuration
+1. Open your MySQL client (Workbench or CLI).
+2. Execute the script found in: `src/main/resources/quiz_db.sql`. This will create the database `quiz_db` and the necessary tables.
+3. **Verify Connection**: Open `src/main/java/com/util/DBConnection.java` and ensure the `URL`, `USER`, and `PASSWORD` match your local MySQL settings.
+
+### 3. Importing into Eclipse
+1. Launch Eclipse and select **File > Import**.
+2. Choose **Maven > Existing Maven Projects** and click **Next**.
+3. Browse to the root folder of this project and click **Finish**.
+4. Wait for Maven to download all dependencies (check the progress bar in the bottom right).
+
+### 4. Running the Project
+1. Make sure you have **Apache Tomcat 9.0** configured in the **Servers** tab.
+2. Right-click the project folder in **Project Explorer**.
+3. Select **Run As > Run on Server**.
+4. Choose your Tomcat server and click **Finish**.
+5. Once the server starts, navigate to: `http://localhost:8080/quiz-application/`
+
+---
+
+## 🔐 Credentials
+
+| Role | Username | Password |
+| :--- | :--- | :--- |
+| **Admin** | `admin` | `admin123` |
+| **Student** | *(Create your own via Register)* | *(User-defined)* |
+
+---
+
+## 📂 Project Structure
+
+- `src/main/java`: Backend source code (Servlets, DAOs, Models, Utilities).
+- `src/main/webapp`: Frontend resources (JSPs, CSS, JS).
+- `src/main/resources`: SQL scripts and configuration files.
+- `pom.xml`: Maven dependencies and build configuration.
+
+---
+
+> [!TIP]
+> **Pro Tip**: If you face any "Class Not Found" errors in Eclipse, right-click the project, go to **Maven > Update Project...**, check **Force Update of Snapshots/Releases**, and click **OK**.
